@@ -1,4 +1,4 @@
-name: Snyk Scan via CLI
+name: Snyk Scan via CLI (Java)
 
 on:
   workflow_dispatch:
@@ -10,29 +10,29 @@ permissions:
 jobs:
   security:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          node-version: 18
-
-      - name: Install dependencies
-        working-directory: src
-        run: npm install
+          distribution: temurin
+          java-version: 17
 
       - name: Install Snyk CLI
         run: npm install -g snyk
 
-      - name: Run Snyk Test
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        working-directory: src
-        run: snyk test || true
+      - name: Build project with Maven (no tests)
+        run: mvn install -DskipTests
 
-      - name: Send results to Snyk (monitor)
+      - name: Run Snyk Test (Maven)
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        working-directory: src
-        run: snyk monitor
+        run: snyk test --all-projects || true
+
+      - name: Monitor project in Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor --all-projects
